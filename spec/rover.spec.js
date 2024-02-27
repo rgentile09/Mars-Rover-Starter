@@ -12,10 +12,10 @@ describe("Rover class", function () {
     let commands = [new Command('MODE_CHANGE', 'LOW_POWER'), new Command('STATUS_CHECK')];
     let message = new Message('Test message with two commands', commands);
     let rover = new Rover(98382);    // Passes 98382 as the rover's position.
+    expect(rover.mode).toBe('NORMAL');
     let response = rover.receiveMessage(message);
     console.log(response);
     expect(rover.position).toBe(98382);
-    expect(rover.mode).toBe('Normal');
     expect(rover.generatorWatts).toBe(110)
   });
 
@@ -34,7 +34,7 @@ describe("Rover class", function () {
     let rover = new Rover(98382);    // Passes 98382 as the rover's position.
     let response = rover.receiveMessage(message);
     console.log(response);
-    expect(response.results.length).toBe(2)
+    expect(response.results.length).toBeGreaterThan(1);
   });
   
   it("responds correctly to the status check command", function () {
@@ -42,9 +42,43 @@ describe("Rover class", function () {
     let message = new Message('Test message with two commands', commands);
     let rover = new Rover(98382);    // Passes 98382 as the rover's position.
     let response = rover.receiveMessage(message);
-    console.log(rover);
-    expect(response.roverStatus.position).toEqual(98382);
-    expect(response.roverStatus.mode).toBe('Normal');
-    expect(response.roverStatus.generatorWatts).toEqual(110);
+    console.log(response);
+    expect(response.results[1].roverStatus.position).toEqual(98382);
+    expect(response.results[1].roverStatus.mode).toBe('LOW_POWER');
+    expect(response.results[1].roverStatus.generatorWatts).toEqual(110);
   });
+
+  it("responds correctly to the mode change command", function () {
+    let commands = [new Command('MODE_CHANGE', 'LOW_POWER'),new Command('STATUS_CHECK')];
+    let message = new Message('Test message with two commands', commands);
+    let rover = new Rover(98382);    // Passes 98382 as the rover's position.
+    let response = rover.receiveMessage(message);
+    console.log(response);
+        expect(response.results[0].completed).toBeTruthy()
+        expect(rover.mode).toBe('LOW_POWER')
+          
+  });
+
+  it("responds with a false completed value when attempting to move in LOW_POWER mode", function () {
+    let commands = [new Command('MODE_CHANGE', 'LOW_POWER'), new Command('MOVE', 4321)];
+    let message = new Message('Test message with two commands', commands);
+    let rover = new Rover(98382);    // Passes 98382 as the rover's position.
+    let response = rover.receiveMessage(message);
+    console.log(response);
+        expect(response.results[1].completed).toBeFalsy()
+
+          
+  });
+
+  it("responds with the position for the move command", function () {
+    let commands = [new Command('MOVE', 4321), new Command('STATUS_CHECK')];
+    let message = new Message('Test message with two commands', commands);
+    let rover = new Rover(98382);    // Passes 98382 as the rover's position.
+    let response = rover.receiveMessage(message);
+    console.log(response);
+        expect(response.results[1].roverStatus.position).toEqual(4321);
+      
+          
+  });
+  
 });

@@ -6,41 +6,60 @@ const Command = require('./command.js');
 class Rover {
   constructor(position) {
     this.position = position,
-      this.mode = 'Normal',
+      this.mode = 'NORMAL',
       this.generatorWatts = 110
   }
- 
+
   receiveMessage(message) {
     let response = {
       message: message.name,
-      results: message.commands,
-      roverStatus:{
-        mode: this.mode,
-        generatorWatts: this.generatorWatts,
-        position: this.position
+      results: []
+    };
+
+
+
+    for (let i = 0; i < message.commands.length; i++) {
+
+      if (message.commands[i].commandType === 'STATUS_CHECK') {
+        response.results.push({
+          completed: true,
+          roverStatus: {
+            mode: this.mode,
+            generatorWatts: this.generatorWatts,
+            position: this.position
+          }
+        })
+
+
+      }
+      if (message.commands[i].commandType === 'MODE_CHANGE') {
+          response.results.push({
+            completed: true,
+          })
+          this.mode = message.commands[i].value
+        }
+
+        
+        if (message.commands[i].commandType === 'MOVE') {
+          if (this.mode === 'NORMAL') {
+            response.results.push({
+              completed: true,
+            })
+          this.position= message.commands[i].value
+          }
+          if (this.mode === 'LOW_POWER') {
+            response.results.push({
+              completed: false,
+            })
+          }
       }
     }
-    
-  return response;
+    return response;
 
-    
-    
   }
+
+
 }
 
 
 module.exports = Rover;
-// let rover = new Rover(100);
-// let commands = [
-//    new Command('MOVE', 4321),
-//    new Command('STATUS_CHECK'),
-//    new Command('MODE_CHANGE', 'LOW_POWER'),
-//    new Command('MOVE', 3579),
-//    new Command('STATUS_CHECK')
-// ];
-// let message = new Message('TA power', commands);
-// let response = rover.receiveMessage(message);
-// console.log(rover);
-// console.log(response);
-
-// console.log(JSON.stringify(response, null, 2));
